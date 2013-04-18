@@ -1,13 +1,13 @@
-/**
- * 
- */
 package main.BubbleShooter;
 
+import java.util.Arrays;
+
+import BubbleShooter.model.Ball;
+import BubbleShooter.model.BallPool;
 import BubbleShooter.model.Droid;
 import BubbleShooter.model.components.Speed;
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.util.Log;
@@ -15,14 +15,12 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-/**
- * @author impaler This is the main surface that handles the ontouch events and
- *         draws the image to the screen.
- */
 public class MainGamePanel extends SurfaceView implements
 		SurfaceHolder.Callback {
 
+	public Ball MovingBall = null;
 	private static final String TAG = MainGamePanel.class.getSimpleName();
+	public DisJoint allConnectedSets, sameColorSets;
 
 	private MainThread thread;
 	private Droid droid;
@@ -32,9 +30,14 @@ public class MainGamePanel extends SurfaceView implements
 		// adding the callback (this) to the surface holder to intercept events
 		getHolder().addCallback(this);
 
-		// create droid and load bitmap
-		droid = new Droid(BitmapFactory.decodeResource(getResources(),
-				R.drawable.droid_1), 50, 50);
+		// initialize Ball Pool
+		int totalBallNumber = (getWidth() * getHeight())
+				/ (Ball.radius * Ball.radius) + 20;
+		BallPool.init(totalBallNumber);
+
+		// initialize disjoint sets
+		allConnectedSets = new DisJoint(totalBallNumber);
+		sameColorSets = new DisJoint(totalBallNumber);
 
 		// create the game loop thread
 		thread = new MainThread(getHolder(), this);
@@ -52,6 +55,7 @@ public class MainGamePanel extends SurfaceView implements
 	public void surfaceCreated(SurfaceHolder holder) {
 		// at this point the surface is created and
 		// we can safely start the game loop
+		Log.i("GAD", BallPool.getInactiveBalls().size() + "");
 		thread.setRunning(true);
 		thread.start();
 	}
@@ -137,6 +141,45 @@ public class MainGamePanel extends SurfaceView implements
 		}
 		// Update the lone droid
 		droid.update();
+	}
+
+	public static class DisJoint {
+		int parent[];
+
+		public DisJoint(int V) {
+			parent = new int[V];
+			for (int i = 0; i < parent.length; i++)
+				parent[i] = i;
+		}
+
+		private boolean isConnected(int from, int to) {
+			return findParent(from) == findParent(to);
+		}
+
+		private int findParent(int index) {
+			if (parent[index] == index)
+				return index;
+			else
+				return parent[index] = findParent(parent[index]);
+		}
+
+		private void union(int from, int to) {
+			parent[findParent(from)] = findParent(to);
+		}
+
+		private int numOfStes() {
+			// can be implemented using boolean array
+			int res = 0;
+			for (int i = 0; i < parent.length; i++)
+				if (parent[i] == i)
+					res++;
+			return res;
+		}
+
+		@Override
+		public String toString() {
+			return Arrays.toString(parent);
+		}
 	}
 
 }
