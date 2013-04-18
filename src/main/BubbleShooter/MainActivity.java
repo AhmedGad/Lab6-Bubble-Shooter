@@ -6,10 +6,10 @@ import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 
-public class DroidzActivity extends Activity {
+public class MainActivity extends Activity {
     /** Called when the activity is first created. */
 	
-	private static final String TAG = DroidzActivity.class.getSimpleName();
+	private static final String TAG = MainActivity.class.getSimpleName();
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
