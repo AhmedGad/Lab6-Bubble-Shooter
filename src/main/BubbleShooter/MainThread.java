@@ -60,13 +60,25 @@ public class MainThread extends Thread {
 
 					if (checkCollision) {
 						moving = this.gamePanel.MovingBall;
+						boolean stop = false;
 						for (Ball cur : activeBalls) {
 							dx = cur.x - moving.x;
 							dy = cur.y - moving.y;
 							if (dx * dx + dy * dy <= Ball.radius * Ball.radius) {
-								
+								if (moving.color == cur.color)
+									this.gamePanel.sameColorSets.union(cur.id,
+											moving.id);
+								this.gamePanel.allConnectedSets.union(cur.id,
+										moving.id);
+								stop = true;
 							}
 						}
+
+						if (stop) {
+							this.gamePanel.MovingBall = null;
+							checkCollision = false;
+						}
+						this.gamePanel.checkFalling(moving.id);
 					}
 
 					// update game state

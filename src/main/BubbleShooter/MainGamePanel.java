@@ -152,22 +152,22 @@ public class MainGamePanel extends SurfaceView implements
 				parent[i] = i;
 		}
 
-		private boolean isConnected(int from, int to) {
+		public boolean isConnected(int from, int to) {
 			return findParent(from) == findParent(to);
 		}
 
-		private int findParent(int index) {
+		public int findParent(int index) {
 			if (parent[index] == index)
 				return index;
 			else
 				return parent[index] = findParent(parent[index]);
 		}
 
-		private void union(int from, int to) {
+		public void union(int from, int to) {
 			parent[findParent(from)] = findParent(to);
 		}
 
-		private int numOfStes() {
+		public int numOfStes() {
 			// can be implemented using boolean array
 			int res = 0;
 			for (int i = 0; i < parent.length; i++)
@@ -180,6 +180,11 @@ public class MainGamePanel extends SurfaceView implements
 		public String toString() {
 			return Arrays.toString(parent);
 		}
+	}
+
+	public void checkFalling(int id) {
+		// TODO Auto-generated method stub
+
 	}
 
 }
