@@ -23,7 +23,8 @@ public class MainGamePanel extends SurfaceView implements
 	public static int width;
 	public static int height;
 	private MainThread thread;
-
+	public static final int speed = 5;
+	
 	public MainGamePanel(Context context, DisplayMetrics displaymetrics) {
 		super(context);
 		// adding the callback (this) to the surface holder to intercept events
@@ -86,28 +87,21 @@ public class MainGamePanel extends SurfaceView implements
 		Log.d(TAG, "Thread was shut down cleanly");
 	}
 
+	
+
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 
 		if (event.getAction() == MotionEvent.ACTION_DOWN) {
-			float x = event.getX();
-			float y = event.getY();
-			float abs;
+			int x = (int) event.getX();
+			int y = (int) event.getY();
 			MovingBall.dx = x - MovingBall.x;
 			MovingBall.dy = y - MovingBall.y;
-			if (Math.abs(MovingBall.dx) > Math.abs(MovingBall.dy))
-				abs = Math.abs(MovingBall.dy);
-			else
-				abs = Math.abs(MovingBall.dx);
-			if (abs != 0) {
-				MovingBall.dy /= abs;
-				MovingBall.dx /= abs;
-			} else {
-				if (MovingBall.dy != 0) {
-					MovingBall.dx = 0;
-					MovingBall.dy = -1;
-				}
-			}
+			float s2 = (MovingBall.dx*MovingBall.dx)+(MovingBall.dy*MovingBall.dy);
+			float t2 = speed*speed;
+			float h = (float)Math.sqrt(t2/s2);
+			MovingBall.dx *=h;
+			MovingBall.dy *=h;
 		}
 		return true;
 	}
