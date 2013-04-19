@@ -1,10 +1,7 @@
 package BubbleShooter.model;
 
-import android.graphics.Color;
-
 public class Ball {
-	public Color color;
-	public int x, y, id;
+	public int x, y, id, color;
 
 	public Ball(int id) {
 		this.id = id;

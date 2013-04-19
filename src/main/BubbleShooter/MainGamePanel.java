@@ -1,6 +1,8 @@
 package main.BubbleShooter;
 
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import BubbleShooter.model.Ball;
 import BubbleShooter.model.BallPool;
@@ -21,6 +23,7 @@ public class MainGamePanel extends SurfaceView implements
 	public Ball MovingBall = null;
 	private static final String TAG = MainGamePanel.class.getSimpleName();
 	public DisJoint allConnectedSets, sameColorSets;
+	private int ceil_shift;
 
 	private MainThread thread;
 	private Droid droid;
@@ -30,10 +33,14 @@ public class MainGamePanel extends SurfaceView implements
 		// adding the callback (this) to the surface holder to intercept events
 		getHolder().addCallback(this);
 
+		ceil_shift = 0;
+
 		// initialize Ball Pool
 		int totalBallNumber = (getWidth() * getHeight())
-				/ (Ball.radius * Ball.radius) + 20;
+				/ (Ball.radius * Ball.radius) * 2;
 		BallPool.init(totalBallNumber);
+		vis = new boolean[totalBallNumber];
+		this.activeBalls = BallPool.getActiveBalls();
 
 		// initialize disjoint sets
 		allConnectedSets = new DisJoint(totalBallNumber);
@@ -182,9 +189,69 @@ public class MainGamePanel extends SurfaceView implements
 		}
 	}
 
-	public void checkFalling(int id) {
-		// TODO Auto-generated method stub
+	private Queue<Ball> falling = new LinkedList<Ball>();
+	private Queue<Ball> activeBalls;
+	boolean vis[];
+
+	public void checkFalling() {
+		Queue<Ball> q = new LinkedList<Ball>();
+		int dx, dy;
+
+		for (Ball ball : activeBalls)
+			vis[ball.id] = false;
+
+		q.add(MovingBall);
+		vis[MovingBall.id] = true;
+
+		while (!q.isEmpty()) {
+			Ball cur = q.poll();
+			falling.add(cur);
+
+			for (Ball ball : activeBalls) {
+				dx = ball.x - cur.x;
+				dy = ball.y - cur.y;
+				if (!vis[ball.id] && ball.color == cur.color
+						&& dx * dx + dy * dy <= Ball.radius * Ball.radius) {
+					q.add(ball);
+					vis[ball.id] = true;
+				}
+
+			}
+		}
+
+		// same touched colors must be at least 3
+		if (falling.size() < 3) {
+			falling.clear();
+			return;
+		}
+
+		// remove falling balls from active balls
+		for (Ball ball : falling)
+			activeBalls.remove(ball);
+		for (Ball ball : activeBalls)
+			vis[ball.id] = false;
+
+		for (Ball ball : activeBalls)
+			if (ball.y == Ball.radius + ceil_shift) {
+				q.add(ball);
+				vis[ball.id] = true;
+			}
+
+		while (!q.isEmpty()) {
+			Ball cur = q.poll();
+			falling.add(cur);
+			activeBalls.remove(cur);
+
+			for (Ball ball : activeBalls) {
+				dx = ball.x - cur.x;
+				dy = ball.y - cur.y;
+				if (!vis[ball.id] && ball.color == cur.color
+						&& dx * dx + dy * dy <= Ball.radius * Ball.radius) {
+					q.add(ball);
+					vis[ball.id] = true;
+				}
+			}
+		}
 
 	}
-
 }
