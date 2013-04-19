@@ -82,6 +82,9 @@ public class MainThread extends Thread {
 					// render state to the screen
 					// draws the canvas on the panel
 					this.gamePanel.render(canvas);
+					
+					// needed ?!?!?!?!?!?
+//					Thread.sleep(10);
 				}
 			} finally {
 				// in case of an exception the surface is not left in

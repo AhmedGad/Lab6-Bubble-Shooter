@@ -3,6 +3,7 @@ package main.BubbleShooter;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Window;
 
@@ -16,6 +17,8 @@ public class MainActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		DisplayMetrics displaymetrics = new DisplayMetrics();
+		getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
 		// requesting to turn the title OFF
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		// making it full screen
@@ -24,7 +27,7 @@ public class MainActivity extends Activity {
 
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 		// set our MainGamePanel as the View
-		setContentView(new MainGamePanel(this));
+		setContentView(new MainGamePanel(this,displaymetrics));
 		Log.d(TAG, "View added");
 	}
 
