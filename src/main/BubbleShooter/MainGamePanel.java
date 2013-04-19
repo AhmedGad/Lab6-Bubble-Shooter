@@ -1,5 +1,6 @@
 package main.BubbleShooter;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import BubbleShooter.model.Ball;
@@ -151,6 +152,9 @@ public class MainGamePanel extends SurfaceView implements
 		for (Ball ball : activeBalls) {
 			ball.draw(canvas);
 		}
+		Iterator<Ball> it = falling.iterator();
+		while (it.hasNext())
+			it.next().draw(canvas);
 	}
 
 	/**
@@ -179,6 +183,11 @@ public class MainGamePanel extends SurfaceView implements
 			movingBall.x += movingBall.dx;
 			movingBall.y += movingBall.dy;
 		}
+		
+		Iterator<Ball> it = falling.iterator();
+		while (it.hasNext())
+			it.next().fallingMove();
+
 	}
 
 	private Queue<Ball> falling = new LinkedList<Ball>();
@@ -202,7 +211,6 @@ public class MainGamePanel extends SurfaceView implements
 		while (!q.isEmpty()) {
 			Ball cur = q.poll();
 			falling.add(cur);
-
 			for (Ball ball : activeBalls) {
 				dx = ball.x - cur.x;
 				dy = ball.y - cur.y;
@@ -270,5 +278,10 @@ public class MainGamePanel extends SurfaceView implements
 		activeBalls.clear();
 		for (int i = 0; i < cnt; i++)
 			activeBalls.add(tmp_ball_arr[i]);
+
+		Iterator<Ball> it = falling.iterator();
+		while (it.hasNext())
+			it.next().initFall();
+
 	}
 }

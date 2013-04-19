@@ -17,6 +17,7 @@ import android.view.SurfaceHolder;
  * The Main thread which contains the game loop. The thread must have access to
  * the surface view and holder to trigger events every game tick.
  */
+
 public class MainThread extends Thread {
 
 	private static final String TAG = MainThread.class.getSimpleName();
