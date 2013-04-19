@@ -4,7 +4,8 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 
 public class Ball {
-	public int x, y, id, color, dx, dy;
+	public float x, y, dx, dy;
+	public int id, color;
 	public static Bitmap bitmap; // the actual bitmap
 
 	public Ball(int id) {

@@ -28,21 +28,18 @@ public class MainGamePanel extends SurfaceView implements
 		super(context);
 		// adding the callback (this) to the surface holder to intercept events
 		getHolder().addCallback(this);
-		int totalBallNumber = (getWidth() * getHeight())
-				/ (Ball.radius * Ball.radius) * 2;
-		BallPool.init(1000);
+
+		width = displaymetrics.widthPixels;
+		height = displaymetrics.heightPixels;
+
+		int totalBallNumber = (width * height) / (Ball.radius * Ball.radius)
+				* 2;
+		BallPool.init(totalBallNumber);
 		MovingBall = BallPool.getNewBall();
 		MovingBall.x = width / 2;
 		MovingBall.y = height / 2;
 
 		ceil_shift = 0;
-
-		width = displaymetrics.widthPixels;
-		height = displaymetrics.heightPixels;
-
-		// XXX DON'T DELETE THIS
-		// width = getWidth();
-		// height =getHeight();
 
 		// initialize Ball Pool
 
@@ -91,10 +88,27 @@ public class MainGamePanel extends SurfaceView implements
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		int x = (int) event.getX();
-		int y = (int) event.getY();
-		MovingBall.dx = x - MovingBall.x;
-		MovingBall.dy = y - MovingBall.y;
+
+		if (event.getAction() == MotionEvent.ACTION_DOWN) {
+			float x = event.getX();
+			float y = event.getY();
+			float abs;
+			MovingBall.dx = x - MovingBall.x;
+			MovingBall.dy = y - MovingBall.y;
+			if (Math.abs(MovingBall.dx) > Math.abs(MovingBall.dy))
+				abs = Math.abs(MovingBall.dy);
+			else
+				abs = Math.abs(MovingBall.dx);
+			if (abs != 0) {
+				MovingBall.dy /= abs;
+				MovingBall.dx /= abs;
+			} else {
+				if (MovingBall.dy != 0) {
+					MovingBall.dx = 0;
+					MovingBall.dy = -1;
+				}
+			}
+		}
 		return true;
 	}
 
@@ -131,7 +145,7 @@ public class MainGamePanel extends SurfaceView implements
 
 	public void checkFalling() {
 		Queue<Ball> q = new LinkedList<Ball>();
-		int dx, dy;
+		float dx, dy;
 
 		for (Ball ball : activeBalls)
 			vis[ball.id] = false;

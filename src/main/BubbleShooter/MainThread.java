@@ -49,7 +49,7 @@ public class MainThread extends Thread {
 
 		Queue<Ball> activeBalls = BallPool.getActiveBalls();
 		Ball moving = null;
-		int dx, dy;
+		float dx, dy;
 		while (running) {
 			canvas = null;
 			// try locking the canvas for exclusive pixel editing
@@ -82,9 +82,13 @@ public class MainThread extends Thread {
 					// render state to the screen
 					// draws the canvas on the panel
 					this.gamePanel.render(canvas);
-					
-					// needed ?!?!?!?!?!?
-//					Thread.sleep(10);
+
+					try {
+						Thread.sleep(50);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			} finally {
 				// in case of an exception the surface is not left in
