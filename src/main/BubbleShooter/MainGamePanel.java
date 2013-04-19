@@ -238,7 +238,7 @@ public class MainGamePanel extends SurfaceView implements
 
 		for (Ball ball : activeBalls) {
 
-			if (ball.y == Ball.radius + ceil_shift) {
+			if (Math.abs(ball.y - Ball.radius - ceil_shift) < 10) {
 				q.add(ball);
 				vis[ball.id] = true;
 			}

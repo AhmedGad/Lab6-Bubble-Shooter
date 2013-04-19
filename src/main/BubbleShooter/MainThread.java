@@ -62,15 +62,18 @@ public class MainThread extends Thread {
 					if (checkCollision) {
 						moving = this.gamePanel.movingBall;
 						boolean stop = false;
-						for (Ball cur : activeBalls) {
-							dx = cur.x - moving.x;
-							dy = cur.y - moving.y;
-							if (dx * dx + dy * dy <= diam * diam) {
-								stop = true;
-								break;
-							}
-						}
 
+						if (Math.abs(moving.y - Ball.radius) < 10)
+							stop = true;
+						else
+							for (Ball cur : activeBalls) {
+								dx = cur.x - moving.x;
+								dy = cur.y - moving.y;
+								if (dx * dx + dy * dy <= diam * diam) {
+									stop = true;
+									break;
+								}
+							}
 						if (stop) {
 							activeBalls.add(moving);
 							this.gamePanel.checkFalling();
