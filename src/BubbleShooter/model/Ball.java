@@ -9,8 +9,9 @@ public class Ball {
 	public float x, y, dx, dy;
 	public int id, color;
 	public static Bitmap bitmap; // the actual bitmap
-	private int fx, fy, dirx, diry, type, phase;
-	private static final int d = 20;
+	private int fx, fy, type, phase;
+	private double theta;
+	private static final int d = 100;
 	private static final int fallingSpeed = 4;
 	public boolean ceiled;
 
@@ -30,34 +31,35 @@ public class Ball {
 	}
 
 	public void initFall() {
-		double cosAlpha = fallingSpeed * 1.0 / (2.0 * d);
-		dx = (float) (fallingSpeed * cosAlpha);
-		dy = (float) (Math.sqrt(4.0 * d * d - fallingSpeed * fallingSpeed) / (2.0 * d))
-				* (fallingSpeed);
+		theta = Math.acos((2.0 * d * d - fallingSpeed * fallingSpeed)
+				/ (2 * d * d));
 		fy = (int) y;
 		if (Math.random() > 0.5) {
 			type = 1;
-			dirx = 1;
 			fx = (int) x + d;
 		} else {
 			type = 2;
-			dirx = -1;
 			fx = (int) x - d;
 		}
 		phase = 1;
-		diry = -1;
 	}
 
 	public void fallingMove() {
 		if (phase == 1) {
-			x += dx * dirx;
-			y += dy * diry;
-			if (type == 1 && x >= fx && diry == -1) {
-				diry *= -1;
+			double tx, ty;
+			if (type == 1) {
+				tx = Math.cos(theta) * (x - fx) - Math.sin(theta) * (y - fy)
+						+ fx;
+				ty = Math.sin(theta) * (x - fx) + Math.cos(theta) * (y - fy)
+						+ fy;
+			} else {
+				tx = Math.cos(-theta) * (x - fx) - Math.sin(-theta) * (y - fy)
+						+ fx;
+				ty = Math.sin(-theta) * (x - fx) + Math.cos(-theta) * (y - fy)
+						+ fy;
 			}
-			if (type == 2 && x <= fx && diry == -1) {
-				diry *= -1;
-			}
+			x = (float) tx;
+			y = (float) ty;
 			if (y > fy)
 				phase = 2;
 		} else {
