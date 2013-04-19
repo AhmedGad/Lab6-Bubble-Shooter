@@ -28,7 +28,7 @@ public class MainThread extends Thread {
 	private MainGamePanel gamePanel;
 
 	// flag to hold game state
-	private boolean running;
+	public boolean running;
 	public boolean checkCollision;
 
 	public void setRunning(boolean running) {
@@ -50,6 +50,7 @@ public class MainThread extends Thread {
 		Queue<Ball> activeBalls = BallPool.getActiveBalls();
 		Ball moving = null;
 		float dx, dy;
+		int diam = Ball.radius * 2;
 		while (running) {
 			canvas = null;
 			// try locking the canvas for exclusive pixel editing
@@ -59,20 +60,21 @@ public class MainThread extends Thread {
 				synchronized (surfaceHolder) {
 
 					if (checkCollision) {
-						moving = this.gamePanel.MovingBall;
+						moving = this.gamePanel.movingBall;
 						boolean stop = false;
 						for (Ball cur : activeBalls) {
 							dx = cur.x - moving.x;
 							dy = cur.y - moving.y;
-							if (dx * dx + dy * dy <= Ball.radius * Ball.radius) {
+							if (dx * dx + dy * dy <= diam * diam) {
 								stop = true;
 								break;
 							}
 						}
 
 						if (stop) {
+							activeBalls.add(moving);
 							this.gamePanel.checkFalling();
-							this.gamePanel.MovingBall = null;
+							this.gamePanel.movingBall = null;
 							checkCollision = false;
 						}
 					}

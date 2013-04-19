@@ -1,7 +1,5 @@
 package main.BubbleShooter;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import BubbleShooter.model.Ball;
@@ -20,7 +18,7 @@ public class MainGamePanel extends SurfaceView implements
 
 	private static final String TAG = MainGamePanel.class.getSimpleName();
 
-	public Ball MovingBall = null;
+	public Ball movingBall = null, waitingBall = null;
 	private int ceil_shift;
 	public static int width;
 	public static int height;
@@ -38,9 +36,11 @@ public class MainGamePanel extends SurfaceView implements
 		int totalBallNumber = (width * height) / (Ball.radius * Ball.radius)
 				* 2;
 		BallPool.init(totalBallNumber);
-		MovingBall = BallPool.getNewBall();
-		MovingBall.x = width / 2;
-		MovingBall.y = height - Ball.radius * 2 - 10;
+
+		waitingBall = BallPool.getNewBall();
+		waitingBall.x = width / 2;
+		waitingBall.y = height - Ball.radius * 2 - 10;
+		waitingBall.color = (int) (Math.random() * Ball.colors.length);
 
 		ceil_shift = 0;
 
@@ -77,10 +77,10 @@ public class MainGamePanel extends SurfaceView implements
 					tmp.y = i * diam + Ball.radius;
 					tmp.x = j * diam + Ball.radius;
 					tmp.color = c;
+					activeBalls.add(tmp);
 				}
 			}
 		}
-
 	}
 
 	@Override
@@ -116,25 +116,38 @@ public class MainGamePanel extends SurfaceView implements
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
+		if (event.getAction() == MotionEvent.ACTION_DOWN && movingBall == null) {
+			movingBall = waitingBall;
 
-		if (event.getAction() == MotionEvent.ACTION_DOWN) {
 			int x = (int) event.getX();
 			int y = (int) event.getY();
-			MovingBall.dx = x - MovingBall.x;
-			MovingBall.dy = y - MovingBall.y;
-			float s2 = (MovingBall.dx * MovingBall.dx)
-					+ (MovingBall.dy * MovingBall.dy);
+			movingBall.dx = x - movingBall.x;
+			movingBall.dy = y - movingBall.y;
+			float s2 = (movingBall.dx * movingBall.dx)
+					+ (movingBall.dy * movingBall.dy);
 			float t2 = speed * speed;
 			float h = (float) Math.sqrt(t2 / s2);
-			MovingBall.dx *= h;
-			MovingBall.dy *= h;
+			movingBall.dx *= h;
+			movingBall.dy *= h;
+
+			waitingBall = BallPool.getNewBall();
+			waitingBall.x = width / 2;
+			waitingBall.y = height - Ball.radius * 2 - 10;
+			waitingBall.color = (int) (Math.random() * Ball.colors.length);
+			thread.checkCollision = true;
 		}
 		return true;
 	}
 
 	public void render(Canvas canvas) {
 		canvas.drawColor(Color.BLACK);
-		MovingBall.draw(canvas);
+
+		if (movingBall != null)
+			movingBall.draw(canvas);
+
+		if (waitingBall != null)
+			waitingBall.draw(canvas);
+
 		for (Ball ball : activeBalls) {
 			ball.draw(canvas);
 		}
@@ -146,24 +159,26 @@ public class MainGamePanel extends SurfaceView implements
 	 * update method.
 	 */
 	public void update() {
-		// check collision with right wall if heading right
-		if (MovingBall.dx > 0 && MovingBall.x + Ball.radius >= width)
-			MovingBall.dx *= -1;
-		// check collision with left wall if heading left
-		if (MovingBall.dx < 0 && MovingBall.x - Ball.radius <= 0)
-			MovingBall.dx *= -1;
+		if (movingBall != null) {
+			// check collision with right wall if heading right
+			if (movingBall.dx > 0 && movingBall.x + Ball.radius >= width)
+				movingBall.dx *= -1;
+			// check collision with left wall if heading left
+			if (movingBall.dx < 0 && movingBall.x - Ball.radius <= 0)
+				movingBall.dx *= -1;
 
-		// check collision with top wall if heading up
-		if (MovingBall.dy < 0 && MovingBall.y - Ball.radius <= 0)
-			MovingBall.dy *= -1;
+			// check collision with top wall if heading up
+			if (movingBall.dy < 0 && movingBall.y - Ball.radius <= 0)
+				movingBall.dy *= -1;
 
-		// check collision with button wall if heading up
-		if (MovingBall.dy > 0 && MovingBall.y - Ball.radius >= height)
-			MovingBall.dy *= -1;
+			// check collision with button wall if heading up
+			if (movingBall.dy > 0 && movingBall.y - Ball.radius >= height)
+				movingBall.dy *= -1;
 
-		// Update the lone droid
-		MovingBall.x += MovingBall.dx;
-		MovingBall.y += MovingBall.dy;
+			// Update the lone droid
+			movingBall.x += movingBall.dx;
+			movingBall.y += movingBall.dy;
+		}
 	}
 
 	private Queue<Ball> falling = new LinkedList<Ball>();
@@ -174,12 +189,15 @@ public class MainGamePanel extends SurfaceView implements
 	public void checkFalling() {
 		Queue<Ball> q = new LinkedList<Ball>();
 		float dx, dy;
-
+		int diam = Ball.radius * 2;
 		for (Ball ball : activeBalls)
 			vis[ball.id] = false;
 
-		q.add(MovingBall);
-		vis[MovingBall.id] = true;
+		// TODO must be deleted and delete ball by ball when falling
+		falling.clear();
+
+		q.add(movingBall);
+		vis[movingBall.id] = true;
 
 		while (!q.isEmpty()) {
 			Ball cur = q.poll();
@@ -189,7 +207,7 @@ public class MainGamePanel extends SurfaceView implements
 				dx = ball.x - cur.x;
 				dy = ball.y - cur.y;
 				if (!vis[ball.id] && ball.color == cur.color
-						&& dx * dx + dy * dy <= Ball.radius * Ball.radius) {
+						&& dx * dx + dy * dy <= diam * diam) {
 					q.add(ball);
 					vis[ball.id] = true;
 				}
@@ -208,17 +226,18 @@ public class MainGamePanel extends SurfaceView implements
 
 		// another method for deletion(more efficient)
 		int cnt = 0;
-		for (Ball ball : activeBalls)
+		for (Ball ball : activeBalls) {
 			if (!vis[ball.id])
 				tmp_ball_arr[cnt++] = ball;
-
+			vis[ball.id] = false;
+		}
 		activeBalls.clear();
 		for (int i = 0; i < cnt; i++)
 			activeBalls.add(tmp_ball_arr[i]);
 		// /////////
 
 		for (Ball ball : activeBalls) {
-			vis[ball.id] = false;
+
 			if (ball.y == Ball.radius + ceil_shift) {
 				q.add(ball);
 				vis[ball.id] = true;
@@ -231,8 +250,7 @@ public class MainGamePanel extends SurfaceView implements
 			for (Ball ball : activeBalls) {
 				dx = ball.x - cur.x;
 				dy = ball.y - cur.y;
-				if (!vis[ball.id] && ball.color == cur.color
-						&& dx * dx + dy * dy <= Ball.radius * Ball.radius) {
+				if (!vis[ball.id] && dx * dx + dy * dy <= diam * diam) {
 					q.add(ball);
 					vis[ball.id] = true;
 				}

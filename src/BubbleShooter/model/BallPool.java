@@ -16,7 +16,6 @@ public class BallPool {
 
 	public static Ball getNewBall() {
 		Ball ret = inactiveBalls.poll();
-		activeBalls.add(ret);
 		return ret;
 	}
 
