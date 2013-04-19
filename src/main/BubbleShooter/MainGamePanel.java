@@ -1,6 +1,5 @@
 package main.BubbleShooter;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -20,9 +19,9 @@ import android.view.SurfaceView;
 public class MainGamePanel extends SurfaceView implements
 		SurfaceHolder.Callback {
 
-	public Ball MovingBall = null;
 	private static final String TAG = MainGamePanel.class.getSimpleName();
-	public DisJoint allConnectedSets, sameColorSets;
+
+	public Ball MovingBall = null;
 	private int ceil_shift;
 
 	private MainThread thread;
@@ -39,12 +38,10 @@ public class MainGamePanel extends SurfaceView implements
 		int totalBallNumber = (getWidth() * getHeight())
 				/ (Ball.radius * Ball.radius) * 2;
 		BallPool.init(totalBallNumber);
-		vis = new boolean[totalBallNumber];
 		this.activeBalls = BallPool.getActiveBalls();
 
-		// initialize disjoint sets
-		allConnectedSets = new DisJoint(totalBallNumber);
-		sameColorSets = new DisJoint(totalBallNumber);
+		vis = new boolean[totalBallNumber];
+		tmp_ball_arr = new Ball[totalBallNumber];
 
 		// create the game loop thread
 		thread = new MainThread(getHolder(), this);
@@ -150,48 +147,10 @@ public class MainGamePanel extends SurfaceView implements
 		droid.update();
 	}
 
-	public static class DisJoint {
-		int parent[];
-
-		public DisJoint(int V) {
-			parent = new int[V];
-			for (int i = 0; i < parent.length; i++)
-				parent[i] = i;
-		}
-
-		public boolean isConnected(int from, int to) {
-			return findParent(from) == findParent(to);
-		}
-
-		public int findParent(int index) {
-			if (parent[index] == index)
-				return index;
-			else
-				return parent[index] = findParent(parent[index]);
-		}
-
-		public void union(int from, int to) {
-			parent[findParent(from)] = findParent(to);
-		}
-
-		public int numOfStes() {
-			// can be implemented using boolean array
-			int res = 0;
-			for (int i = 0; i < parent.length; i++)
-				if (parent[i] == i)
-					res++;
-			return res;
-		}
-
-		@Override
-		public String toString() {
-			return Arrays.toString(parent);
-		}
-	}
-
 	private Queue<Ball> falling = new LinkedList<Ball>();
 	private Queue<Ball> activeBalls;
 	boolean vis[];
+	Ball tmp_ball_arr[];
 
 	public void checkFalling() {
 		Queue<Ball> q = new LinkedList<Ball>();
@@ -226,21 +185,29 @@ public class MainGamePanel extends SurfaceView implements
 		}
 
 		// remove falling balls from active balls
-		for (Ball ball : falling)
-			activeBalls.remove(ball);
-		for (Ball ball : activeBalls)
-			vis[ball.id] = false;
+		// for (Ball ball : falling) activeBalls.remove(ball);
 
+		// another method for deletion(more efficient)
+		int cnt = 0;
 		for (Ball ball : activeBalls)
+			if (!vis[ball.id])
+				tmp_ball_arr[cnt++] = ball;
+
+		activeBalls.clear();
+		for (int i = 0; i < cnt; i++)
+			activeBalls.add(tmp_ball_arr[i]);
+		// /////////
+
+		for (Ball ball : activeBalls) {
+			vis[ball.id] = false;
 			if (ball.y == Ball.radius + ceil_shift) {
 				q.add(ball);
 				vis[ball.id] = true;
 			}
+		}
 
 		while (!q.isEmpty()) {
 			Ball cur = q.poll();
-			falling.add(cur);
-			activeBalls.remove(cur);
 
 			for (Ball ball : activeBalls) {
 				dx = ball.x - cur.x;
@@ -253,5 +220,18 @@ public class MainGamePanel extends SurfaceView implements
 			}
 		}
 
+		// add not visited balls to falling and visited balls will still active
+		cnt = 0;
+
+		for (Ball ball : activeBalls)
+			if (!vis[ball.id]) {
+				falling.add(ball);
+			} else {
+				tmp_ball_arr[cnt++] = ball;
+			}
+
+		activeBalls.clear();
+		for (int i = 0; i < cnt; i++)
+			activeBalls.add(tmp_ball_arr[i]);
 	}
 }
