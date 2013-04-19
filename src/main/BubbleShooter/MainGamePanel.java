@@ -28,12 +28,13 @@ public class MainGamePanel extends SurfaceView implements
 		super(context);
 		// adding the callback (this) to the surface holder to intercept events
 		getHolder().addCallback(this);
-
+		int totalBallNumber = (getWidth() * getHeight())
+				/ (Ball.radius * Ball.radius) * 2;
+		BallPool.init(1000);
 		MovingBall = BallPool.getNewBall();
 		MovingBall.x = width / 2;
 		MovingBall.y = height / 2;
 
-		
 		ceil_shift = 0;
 
 		width = displaymetrics.widthPixels;
@@ -44,9 +45,7 @@ public class MainGamePanel extends SurfaceView implements
 		// height =getHeight();
 
 		// initialize Ball Pool
-		int totalBallNumber = (getWidth() * getHeight())
-				/ (Ball.radius * Ball.radius) * 2;
-		BallPool.init(totalBallNumber);
+
 		this.activeBalls = BallPool.getActiveBalls();
 
 		vis = new boolean[totalBallNumber];
@@ -94,8 +93,8 @@ public class MainGamePanel extends SurfaceView implements
 	public boolean onTouchEvent(MotionEvent event) {
 		int x = (int) event.getX();
 		int y = (int) event.getY();
-		MovingBall.dx=x-MovingBall.x;
-		MovingBall.dy=y-MovingBall.y;
+		MovingBall.dx = x - MovingBall.x;
+		MovingBall.dy = y - MovingBall.y;
 		return true;
 	}
 
