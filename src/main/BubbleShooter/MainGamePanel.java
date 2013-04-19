@@ -185,9 +185,9 @@ public class MainGamePanel extends SurfaceView implements
 		}
 
 		Iterator<Ball> it = falling.iterator();
-		while (it.hasNext())
+		while (it.hasNext()){
 			it.next().fallingMove();
-
+		}
 	}
 
 	private Queue<Ball> falling = new LinkedList<Ball>();
@@ -285,9 +285,9 @@ public class MainGamePanel extends SurfaceView implements
 		for (int i = 0; i < cnt; i++)
 			activeBalls.add(tmp_ball_arr[i]);
 
-		Iterator<Ball> it = falling.iterator();
-		while (it.hasNext())
-			it.next().initFall();
+		for (Ball ball : falling)
+			if (!ball.isFalling)
+				ball.initFall();
 
 	}
 }

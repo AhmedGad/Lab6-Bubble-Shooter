@@ -11,11 +11,13 @@ public class Ball {
 	public static Bitmap bitmap; // the actual bitmap
 	private int fx, fy, type, phase;
 	private double theta;
-	private static final int d = 100;
+	private  int diameterOfFall;
 	private static final int fallingSpeed = 4;
 	public boolean ceiled;
-
+	public boolean isFalling = false;
 	public Ball(int id) {
+		isFalling = false;
+		diameterOfFall = (int)(Math.random()*70.0+30);
 		this.id = id;
 	}
 
@@ -31,15 +33,16 @@ public class Ball {
 	}
 
 	public void initFall() {
-		theta = Math.acos((2.0 * d * d - fallingSpeed * fallingSpeed)
-				/ (2 * d * d));
+		isFalling = true;
+		theta = Math.acos((2.0 * diameterOfFall * diameterOfFall - fallingSpeed * fallingSpeed)
+				/ (2 * diameterOfFall * diameterOfFall));
 		fy = (int) y;
 		if (Math.random() > 0.5) {
 			type = 1;
-			fx = (int) x + d;
+			fx = (int) x + diameterOfFall;
 		} else {
 			type = 2;
-			fx = (int) x - d;
+			fx = (int) x - diameterOfFall;
 		}
 		phase = 1;
 	}

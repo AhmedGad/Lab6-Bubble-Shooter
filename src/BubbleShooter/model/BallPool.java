@@ -21,6 +21,7 @@ public class BallPool {
 
 	public static void release(Ball ball) {
 		activeBalls.remove(ball);
+		ball.isFalling=false;
 		inactiveBalls.add(ball);
 	}
 
