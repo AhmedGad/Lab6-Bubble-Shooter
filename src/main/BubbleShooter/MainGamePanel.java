@@ -1,5 +1,7 @@
 package main.BubbleShooter;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import BubbleShooter.model.Ball;
@@ -23,8 +25,8 @@ public class MainGamePanel extends SurfaceView implements
 	public static int width;
 	public static int height;
 	private MainThread thread;
-	public static final int speed = 5;
-	
+	public static final int speed = 10;
+
 	public MainGamePanel(Context context, DisplayMetrics displaymetrics) {
 		super(context);
 		// adding the callback (this) to the surface holder to intercept events
@@ -38,7 +40,7 @@ public class MainGamePanel extends SurfaceView implements
 		BallPool.init(totalBallNumber);
 		MovingBall = BallPool.getNewBall();
 		MovingBall.x = width / 2;
-		MovingBall.y = height / 2;
+		MovingBall.y = height - Ball.radius * 2 - 10;
 
 		ceil_shift = 0;
 
@@ -49,11 +51,35 @@ public class MainGamePanel extends SurfaceView implements
 		vis = new boolean[totalBallNumber];
 		tmp_ball_arr = new Ball[totalBallNumber];
 
-		// create the game loop thread
+		// create the game loop threadi
 		thread = new MainThread(getHolder(), this);
+
+		initLevel(0);
 
 		// make the GamePanel focusable so it can handle events
 		setFocusable(true);
+	}
+
+	private void initLevel(int levNum) {
+		while (!activeBalls.isEmpty()) {
+			Ball tmp = activeBalls.poll();
+			BallPool.getInactiveBalls().add(tmp);
+		}
+		int maxRows = (height - Ball.radius * 3) / Ball.radius;
+		for (int i = 0; i < Math.min(3 + levNum, maxRows); i++) {
+			for (int j = 0; j < width / Ball.radius;) {
+				int same = levNum > 3 ? 1
+						: (int) (Math.random() * (5 - levNum)) + 1, cnt = 0;
+				int c = (int) (Math.random() * Ball.colors.length);
+				for (; j < width / Ball.radius && cnt < same; cnt++, j++) {
+					Ball tmp = BallPool.getNewBall();
+					tmp.y = i * (Ball.radius * 2) + Ball.radius;
+					tmp.x = j * (Ball.radius * 2) + Ball.radius;
+					tmp.color = c;
+				}
+			}
+		}
+
 	}
 
 	@Override
@@ -87,8 +113,6 @@ public class MainGamePanel extends SurfaceView implements
 		Log.d(TAG, "Thread was shut down cleanly");
 	}
 
-	
-
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 
@@ -97,11 +121,12 @@ public class MainGamePanel extends SurfaceView implements
 			int y = (int) event.getY();
 			MovingBall.dx = x - MovingBall.x;
 			MovingBall.dy = y - MovingBall.y;
-			float s2 = (MovingBall.dx*MovingBall.dx)+(MovingBall.dy*MovingBall.dy);
-			float t2 = speed*speed;
-			float h = (float)Math.sqrt(t2/s2);
-			MovingBall.dx *=h;
-			MovingBall.dy *=h;
+			float s2 = (MovingBall.dx * MovingBall.dx)
+					+ (MovingBall.dy * MovingBall.dy);
+			float t2 = speed * speed;
+			float h = (float) Math.sqrt(t2 / s2);
+			MovingBall.dx *= h;
+			MovingBall.dy *= h;
 		}
 		return true;
 	}
@@ -109,6 +134,9 @@ public class MainGamePanel extends SurfaceView implements
 	public void render(Canvas canvas) {
 		canvas.drawColor(Color.BLACK);
 		MovingBall.draw(canvas);
+		for (Ball ball : activeBalls) {
+			ball.draw(canvas);
+		}
 	}
 
 	/**
@@ -127,6 +155,11 @@ public class MainGamePanel extends SurfaceView implements
 		// check collision with top wall if heading up
 		if (MovingBall.dy < 0 && MovingBall.y - Ball.radius <= 0)
 			MovingBall.dy *= -1;
+
+		// check collision with button wall if heading up
+		if (MovingBall.dy > 0 && MovingBall.y - Ball.radius >= height)
+			MovingBall.dy *= -1;
+
 		// Update the lone droid
 		MovingBall.x += MovingBall.dx;
 		MovingBall.y += MovingBall.dy;
