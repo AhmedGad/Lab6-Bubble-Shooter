@@ -24,7 +24,7 @@ public class MainGamePanel extends SurfaceView implements
 	public static int width;
 	public static int height;
 	private MainThread thread;
-	public static final int speed = 10;
+	public static final int speed = 3;
 
 	public MainGamePanel(Context context, DisplayMetrics displaymetrics) {
 		super(context);
@@ -78,6 +78,7 @@ public class MainGamePanel extends SurfaceView implements
 					tmp.y = i * diam + Ball.radius;
 					tmp.x = j * diam + Ball.radius;
 					tmp.color = c;
+					tmp.ceiled = i == 0 ? true : false;
 					activeBalls.add(tmp);
 				}
 			}
@@ -93,7 +94,6 @@ public class MainGamePanel extends SurfaceView implements
 	public void surfaceCreated(SurfaceHolder holder) {
 		// at this point the surface is created and
 		// we can safely start the game loop
-		Log.i("GAD", BallPool.getInactiveBalls().size() + "");
 		thread.setRunning(true);
 		thread.start();
 	}
@@ -183,7 +183,7 @@ public class MainGamePanel extends SurfaceView implements
 			movingBall.x += movingBall.dx;
 			movingBall.y += movingBall.dy;
 		}
-		
+
 		Iterator<Ball> it = falling.iterator();
 		while (it.hasNext())
 			it.next().fallingMove();
@@ -194,6 +194,7 @@ public class MainGamePanel extends SurfaceView implements
 	private Queue<Ball> activeBalls;
 	boolean vis[];
 	Ball tmp_ball_arr[];
+	Queue<Ball> tmp = new LinkedList<Ball>();
 
 	public void checkFalling() {
 		Queue<Ball> q = new LinkedList<Ball>();
@@ -203,14 +204,16 @@ public class MainGamePanel extends SurfaceView implements
 			vis[ball.id] = false;
 
 		// TODO must be deleted and delete ball by ball when falling
-		falling.clear();
+		// falling.clear();
+
+		tmp.clear();
 
 		q.add(movingBall);
 		vis[movingBall.id] = true;
 
 		while (!q.isEmpty()) {
 			Ball cur = q.poll();
-			falling.add(cur);
+			tmp.add(cur);
 			for (Ball ball : activeBalls) {
 				dx = ball.x - cur.x;
 				dy = ball.y - cur.y;
@@ -224,10 +227,13 @@ public class MainGamePanel extends SurfaceView implements
 		}
 
 		// same touched colors must be at least 3
-		if (falling.size() < 3) {
-			falling.clear();
+		if (tmp.size() < 3) {
+			tmp.clear();
 			return;
 		}
+
+		for (Ball ball : tmp)
+			falling.add(ball);
 
 		// remove falling balls from active balls
 		// for (Ball ball : falling) activeBalls.remove(ball);
@@ -246,7 +252,7 @@ public class MainGamePanel extends SurfaceView implements
 
 		for (Ball ball : activeBalls) {
 
-			if (Math.abs(ball.y - Ball.radius - ceil_shift) < 10) {
+			if (ball.ceiled) {
 				q.add(ball);
 				vis[ball.id] = true;
 			}

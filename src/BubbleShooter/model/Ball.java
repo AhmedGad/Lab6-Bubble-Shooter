@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.util.Log;
 
 public class Ball {
 	public float x, y, dx, dy;
@@ -12,7 +11,8 @@ public class Ball {
 	public static Bitmap bitmap; // the actual bitmap
 	private int fx, fy, dirx, diry, type, phase;
 	private static final int d = 20;
-	private static final int s = 8;
+	private static final int fallingSpeed = 4;
+	public boolean ceiled;
 
 	public Ball(int id) {
 		this.id = id;
@@ -30,9 +30,10 @@ public class Ball {
 	}
 
 	public void initFall() {
-		double cosAlpha = s * 1.0 / (2.0 * d);
-		dx = (float) (s * cosAlpha);
-		dy = (float) (Math.sqrt(4.0 * d * d - s * s) / (2.0 * d)) * (s);
+		double cosAlpha = fallingSpeed * 1.0 / (2.0 * d);
+		dx = (float) (fallingSpeed * cosAlpha);
+		dy = (float) (Math.sqrt(4.0 * d * d - fallingSpeed * fallingSpeed) / (2.0 * d))
+				* (fallingSpeed);
 		fy = (int) y;
 		if (Math.random() > 0.5) {
 			type = 1;
@@ -49,8 +50,8 @@ public class Ball {
 
 	public void fallingMove() {
 		if (phase == 1) {
-			x += dx*dirx;
-			y += dy*diry;
+			x += dx * dirx;
+			y += dy * diry;
 			if (type == 1 && x >= fx && diry == -1) {
 				diry *= -1;
 			}
@@ -60,7 +61,7 @@ public class Ball {
 			if (y > fy)
 				phase = 2;
 		} else {
-			y += s;
+			y += fallingSpeed;
 		}
 	}
 

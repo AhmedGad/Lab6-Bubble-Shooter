@@ -62,11 +62,13 @@ public class MainThread extends Thread {
 
 					if (checkCollision) {
 						moving = this.gamePanel.movingBall;
+						moving.ceiled = false;
 						boolean stop = false;
 
-						if (Math.abs(moving.y - Ball.radius) < 10)
+						if (Math.abs(moving.y - Ball.radius) < 5) {
+							moving.ceiled = true;
 							stop = true;
-						else
+						} else
 							for (Ball cur : activeBalls) {
 								dx = cur.x - moving.x;
 								dy = cur.y - moving.y;
@@ -75,6 +77,7 @@ public class MainThread extends Thread {
 									break;
 								}
 							}
+
 						if (stop) {
 							activeBalls.add(moving);
 							this.gamePanel.checkFalling();
@@ -89,12 +92,12 @@ public class MainThread extends Thread {
 					// draws the canvas on the panel
 					this.gamePanel.render(canvas);
 
-					try {
-						Thread.sleep(30);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					// try {
+					// Thread.sleep(30);
+					// } catch (InterruptedException e) {
+					// // TODO Auto-generated catch block
+					// e.printStackTrace();
+					// }
 				}
 			} finally {
 				// in case of an exception the surface is not left in
