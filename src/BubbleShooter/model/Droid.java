@@ -24,12 +24,6 @@ public class Droid {
 	private boolean touched;	// if droid is touched/picked up
 	private Speed speed;	// the speed with its directions
 	
-	public Droid(Bitmap bitmap, int x, int y) {
-		this.bitmap = bitmap;
-		this.x = x;
-		this.y = y;
-		this.speed = new Speed();
-	}
 	
 	public Bitmap getBitmap() {
 		return bitmap;

@@ -2,12 +2,8 @@ package main.BubbleShooter;
 
 import java.util.LinkedList;
 import java.util.Queue;
-
 import BubbleShooter.model.Ball;
 import BubbleShooter.model.BallPool;
-import BubbleShooter.model.Droid;
-import BubbleShooter.model.components.Speed;
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -27,13 +23,17 @@ public class MainGamePanel extends SurfaceView implements
 	public static int width;
 	public static int height;
 	private MainThread thread;
-	private Droid droid;
 
 	public MainGamePanel(Context context, DisplayMetrics displaymetrics) {
 		super(context);
 		// adding the callback (this) to the surface holder to intercept events
 		getHolder().addCallback(this);
 
+		MovingBall = BallPool.getNewBall();
+		MovingBall.x = width / 2;
+		MovingBall.y = height / 2;
+
+		
 		ceil_shift = 0;
 
 		width = displaymetrics.widthPixels;
@@ -94,13 +94,14 @@ public class MainGamePanel extends SurfaceView implements
 	public boolean onTouchEvent(MotionEvent event) {
 		int x = (int) event.getX();
 		int y = (int) event.getY();
-
+		MovingBall.dx=x-MovingBall.x;
+		MovingBall.dy=y-MovingBall.y;
 		return true;
 	}
 
 	public void render(Canvas canvas) {
 		canvas.drawColor(Color.BLACK);
-		droid.draw(canvas);
+		MovingBall.draw(canvas);
 	}
 
 	/**
