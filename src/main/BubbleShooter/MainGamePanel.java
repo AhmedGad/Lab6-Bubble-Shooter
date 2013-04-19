@@ -65,16 +65,17 @@ public class MainGamePanel extends SurfaceView implements
 			Ball tmp = activeBalls.poll();
 			BallPool.getInactiveBalls().add(tmp);
 		}
-		int maxRows = (height - Ball.radius * 3) / Ball.radius;
+		int diam = Ball.radius * 2;
+		int maxRows = (height - diam * 5) / diam;
 		for (int i = 0; i < Math.min(3 + levNum, maxRows); i++) {
-			for (int j = 0; j < width / Ball.radius;) {
+			for (int j = 0; j < width / diam;) {
 				int same = levNum > 3 ? 1
 						: (int) (Math.random() * (5 - levNum)) + 1, cnt = 0;
 				int c = (int) (Math.random() * Ball.colors.length);
-				for (; j < width / Ball.radius && cnt < same; cnt++, j++) {
+				for (; j < width / diam && cnt < same; cnt++, j++) {
 					Ball tmp = BallPool.getNewBall();
-					tmp.y = i * (Ball.radius * 2) + Ball.radius;
-					tmp.x = j * (Ball.radius * 2) + Ball.radius;
+					tmp.y = i * diam + Ball.radius;
+					tmp.x = j * diam + Ball.radius;
 					tmp.color = c;
 				}
 			}
