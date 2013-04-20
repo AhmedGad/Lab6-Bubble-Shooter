@@ -179,11 +179,16 @@ public class MainGamePanel extends SurfaceView implements
 			movingBall.x += movingBall.dx;
 			movingBall.y += movingBall.dy;
 		}
-
+		Queue<Ball> newFalling = new LinkedList<Ball>();
 		Iterator<Ball> it = falling.iterator();
 		while (it.hasNext()) {
-			it.next().fallingMove();
+			Ball b = it.next();
+			if(!b.fallingMove()){
+				// if still inside add it again !
+				newFalling.add(b);
+			}
 		}
+		falling = newFalling;
 	}
 
 	private Queue<Ball> falling = new LinkedList<Ball>();

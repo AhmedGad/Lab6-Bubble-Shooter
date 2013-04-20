@@ -1,5 +1,7 @@
 package BubbleShooter.model;
 
+import main.BubbleShooter.MainActivity;
+import main.BubbleShooter.MainGamePanel;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -11,13 +13,14 @@ public class Ball {
 	public static Bitmap bitmap; // the actual bitmap
 	private int fx, fy, type, phase;
 	private double theta;
-	private  int diameterOfFall;
+	private int diameterOfFall;
 	private static final int fallingSpeed = 4;
 	public boolean ceiled;
 	public boolean isFalling = false;
+
 	public Ball(int id) {
 		isFalling = false;
-		diameterOfFall = (int)(Math.random()*70.0+30);
+		diameterOfFall = (int) (Math.random() * 70.0 + 30);
 		this.id = id;
 	}
 
@@ -34,7 +37,8 @@ public class Ball {
 
 	public void initFall() {
 		isFalling = true;
-		theta = Math.acos((2.0 * diameterOfFall * diameterOfFall - fallingSpeed * fallingSpeed)
+		theta = Math.acos((2.0 * diameterOfFall * diameterOfFall - fallingSpeed
+				* fallingSpeed)
 				/ (2 * diameterOfFall * diameterOfFall));
 		fy = (int) y;
 		if (Math.random() > 0.5) {
@@ -47,7 +51,7 @@ public class Ball {
 		phase = 1;
 	}
 
-	public void fallingMove() {
+	public boolean fallingMove() {
 		if (phase == 1) {
 			double tx, ty;
 			if (type == 1) {
@@ -65,8 +69,12 @@ public class Ball {
 			y = (float) ty;
 			if (y > fy)
 				phase = 2;
+			return false;
 		} else {
 			y += fallingSpeed;
+			if (y > MainGamePanel.height + radius)
+				return true;
+			return false;
 		}
 	}
 
