@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello World, DroidzActivity!</string>
-    <string name="app_name">Bubble Shooter</string>
+
+    <string name="app_name">Lab6-Bubble-Shooter</string>
+
 </resources>

@@ -1,9 +1,8 @@
-package main.BubbleShooter;
+package bubbleShooter.main;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
-import BubbleShooter.model.Ball;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -24,7 +23,11 @@ public class MainGamePanel extends SurfaceView implements
 	private MainThread thread;
 	public static final int speed = 3;
 
-	public MainGamePanel(Context context, DisplayMetrics displaymetrics) {
+	Queue<Ball> activeBalls = new LinkedList<Ball>();
+	Queue<Ball> BallPool = new LinkedList<Ball>();
+
+	public MainGamePanel(Context context, DisplayMetrics displaymetrics,
+			MainThread thread) {
 		super(context);
 		// adding the callback (this) to the surface holder to intercept events
 		getHolder().addCallback(this);
@@ -35,18 +38,18 @@ public class MainGamePanel extends SurfaceView implements
 		int totalBallNumber = (width * height) / (Ball.radius * Ball.radius)
 				* 2;
 		for (int i = 0; i < totalBallNumber; i++)
-			inactiveBalls.add(new Ball(i));
+			BallPool.add(new Ball(i));
 
-		waitingBall = inactiveBalls.poll();
+		waitingBall = BallPool.poll();
 		waitingBall.x = width / 2;
 		waitingBall.y = height - Ball.radius * 2 - 10;
 		waitingBall.color = (int) (Math.random() * Ball.colors.length);
 
 		vis = new boolean[totalBallNumber];
 		tmp_ball_arr = new Ball[totalBallNumber];
-
+		this.thread = thread;
 		// create the game loop thread
-		thread = new MainThread(getHolder(), this);
+		thread.init(getHolder(), this);
 
 		initLevel(0);
 
@@ -57,7 +60,7 @@ public class MainGamePanel extends SurfaceView implements
 	private void initLevel(int levNum) {
 		while (!activeBalls.isEmpty()) {
 			Ball tmp = activeBalls.poll();
-			inactiveBalls.add(tmp);
+			BallPool.add(tmp);
 		}
 		int diam = Ball.radius * 2;
 		int maxRows = (height - diam * 5) / diam;
@@ -67,7 +70,7 @@ public class MainGamePanel extends SurfaceView implements
 						: (int) (Math.random() * (5 - levNum)) + 1, cnt = 0;
 				int c = (int) (Math.random() * Ball.colors.length);
 				for (; j < width / diam && cnt < same; cnt++, j++) {
-					Ball tmp = inactiveBalls.poll();
+					Ball tmp = BallPool.poll();
 					tmp.y = i * diam + Ball.radius;
 					tmp.x = j * diam + Ball.radius;
 					tmp.color = c;
@@ -77,9 +80,6 @@ public class MainGamePanel extends SurfaceView implements
 			}
 		}
 	}
-
-	Queue<Ball> activeBalls = new LinkedList<Ball>();
-	Queue<Ball> inactiveBalls = new LinkedList<Ball>();
 
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,
@@ -127,11 +127,14 @@ public class MainGamePanel extends SurfaceView implements
 			movingBall.dx *= h;
 			movingBall.dy *= h;
 
-			waitingBall = inactiveBalls.poll();
+			waitingBall = BallPool.poll();
 			waitingBall.x = width / 2;
 			waitingBall.y = height - Ball.radius * 2 - 10;
 			waitingBall.color = (int) (Math.random() * Ball.colors.length);
 			thread.checkCollision = true;
+
+			if (!thread.running)
+				thread.myResume();
 		}
 		return true;
 	}
@@ -151,6 +154,8 @@ public class MainGamePanel extends SurfaceView implements
 		Iterator<Ball> it = falling.iterator();
 		while (it.hasNext())
 			it.next().draw(canvas);
+		if (falling.isEmpty() && movingBall == null)
+			thread.running = false;
 	}
 
 	/**
@@ -183,11 +188,13 @@ public class MainGamePanel extends SurfaceView implements
 		Iterator<Ball> it = falling.iterator();
 		while (it.hasNext()) {
 			Ball b = it.next();
-			if(!b.fallingMove()){
+			if (!b.fallingMove()) {
 				// if still inside add it again !
 				newFalling.add(b);
-			}
+			} else
+				BallPool.add(b);
 		}
+		falling.clear();
 		falling = newFalling;
 	}
 

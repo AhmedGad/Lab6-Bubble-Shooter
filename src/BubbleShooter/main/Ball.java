@@ -1,7 +1,5 @@
-package BubbleShooter.model;
+package bubbleShooter.main;
 
-import main.BubbleShooter.MainActivity;
-import main.BubbleShooter.MainGamePanel;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;

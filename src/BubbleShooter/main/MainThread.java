@@ -1,11 +1,10 @@
 /**
  * 
  */
-package main.BubbleShooter;
+package bubbleShooter.main;
 
 import java.util.Queue;
 
-import BubbleShooter.model.Ball;
 import android.graphics.Canvas;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -20,7 +19,6 @@ import android.view.SurfaceHolder;
 public class MainThread extends Thread {
 
 	private static final String TAG = MainThread.class.getSimpleName();
-
 	// Surface holder that can access the physical surface
 	private SurfaceHolder surfaceHolder;
 	// The actual view that handles inputs
@@ -35,11 +33,22 @@ public class MainThread extends Thread {
 		this.running = running;
 	}
 
-	public MainThread(SurfaceHolder surfaceHolder, MainGamePanel gamePanel) {
-		super();
+	public void init(SurfaceHolder surfaceHolder, MainGamePanel gamePanel) {
 		checkCollision = false;
 		this.surfaceHolder = surfaceHolder;
 		this.gamePanel = gamePanel;
+	}
+
+	private boolean pauseNext = false;
+
+	public void myPause() {
+		pauseNext = true;
+	}
+
+	public void myResume() {
+		running = true;
+		pauseNext = false;
+		run();
 	}
 
 	@Override
@@ -52,6 +61,8 @@ public class MainThread extends Thread {
 		float dx, dy;
 		int diam = Ball.radius * 2;
 		while (running) {
+			if (pauseNext)
+				running = false;
 			canvas = null;
 			// try locking the canvas for exclusive pixel editing
 			// in the surface
@@ -90,13 +101,6 @@ public class MainThread extends Thread {
 					// render state to the screen
 					// draws the canvas on the panel
 					this.gamePanel.render(canvas);
-
-					// try {
-					// Thread.sleep(30);
-					// } catch (InterruptedException e) {
-					// // TODO Auto-generated catch block
-					// e.printStackTrace();
-					// }
 				}
 			} finally {
 				// in case of an exception the surface is not left in
