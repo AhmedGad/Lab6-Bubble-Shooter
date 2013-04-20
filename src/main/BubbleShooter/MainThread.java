@@ -6,7 +6,6 @@ package main.BubbleShooter;
 import java.util.Queue;
 
 import BubbleShooter.model.Ball;
-import BubbleShooter.model.BallPool;
 import android.graphics.Canvas;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -48,7 +47,7 @@ public class MainThread extends Thread {
 		Canvas canvas;
 		Log.d(TAG, "Starting game loop");
 
-		Queue<Ball> activeBalls = BallPool.getActiveBalls();
+		Queue<Ball> activeBalls = this.gamePanel.activeBalls;
 		Ball moving = null;
 		float dx, dy;
 		int diam = Ball.radius * 2;

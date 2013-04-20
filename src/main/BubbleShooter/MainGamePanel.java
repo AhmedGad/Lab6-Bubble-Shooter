@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import BubbleShooter.model.Ball;
-import BubbleShooter.model.BallPool;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -20,7 +19,6 @@ public class MainGamePanel extends SurfaceView implements
 	private static final String TAG = MainGamePanel.class.getSimpleName();
 
 	public Ball movingBall = null, waitingBall = null;
-	private int ceil_shift;
 	public static int width;
 	public static int height;
 	private MainThread thread;
@@ -33,26 +31,21 @@ public class MainGamePanel extends SurfaceView implements
 
 		width = displaymetrics.widthPixels;
 		height = displaymetrics.heightPixels;
-
+		// initialize Ball Pool
 		int totalBallNumber = (width * height) / (Ball.radius * Ball.radius)
 				* 2;
-		BallPool.init(totalBallNumber);
+		for (int i = 0; i < totalBallNumber; i++)
+			inactiveBalls.add(new Ball(i));
 
-		waitingBall = BallPool.getNewBall();
+		waitingBall = inactiveBalls.poll();
 		waitingBall.x = width / 2;
 		waitingBall.y = height - Ball.radius * 2 - 10;
 		waitingBall.color = (int) (Math.random() * Ball.colors.length);
 
-		ceil_shift = 0;
-
-		// initialize Ball Pool
-
-		this.activeBalls = BallPool.getActiveBalls();
-
 		vis = new boolean[totalBallNumber];
 		tmp_ball_arr = new Ball[totalBallNumber];
 
-		// create the game loop threadi
+		// create the game loop thread
 		thread = new MainThread(getHolder(), this);
 
 		initLevel(0);
@@ -64,7 +57,7 @@ public class MainGamePanel extends SurfaceView implements
 	private void initLevel(int levNum) {
 		while (!activeBalls.isEmpty()) {
 			Ball tmp = activeBalls.poll();
-			BallPool.getInactiveBalls().add(tmp);
+			inactiveBalls.add(tmp);
 		}
 		int diam = Ball.radius * 2;
 		int maxRows = (height - diam * 5) / diam;
@@ -74,7 +67,7 @@ public class MainGamePanel extends SurfaceView implements
 						: (int) (Math.random() * (5 - levNum)) + 1, cnt = 0;
 				int c = (int) (Math.random() * Ball.colors.length);
 				for (; j < width / diam && cnt < same; cnt++, j++) {
-					Ball tmp = BallPool.getNewBall();
+					Ball tmp = inactiveBalls.poll();
 					tmp.y = i * diam + Ball.radius;
 					tmp.x = j * diam + Ball.radius;
 					tmp.color = c;
@@ -84,6 +77,9 @@ public class MainGamePanel extends SurfaceView implements
 			}
 		}
 	}
+
+	Queue<Ball> activeBalls = new LinkedList<Ball>();
+	Queue<Ball> inactiveBalls = new LinkedList<Ball>();
 
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,
@@ -131,7 +127,7 @@ public class MainGamePanel extends SurfaceView implements
 			movingBall.dx *= h;
 			movingBall.dy *= h;
 
-			waitingBall = BallPool.getNewBall();
+			waitingBall = inactiveBalls.poll();
 			waitingBall.x = width / 2;
 			waitingBall.y = height - Ball.radius * 2 - 10;
 			waitingBall.color = (int) (Math.random() * Ball.colors.length);
@@ -185,13 +181,13 @@ public class MainGamePanel extends SurfaceView implements
 		}
 
 		Iterator<Ball> it = falling.iterator();
-		while (it.hasNext()){
+		while (it.hasNext()) {
 			it.next().fallingMove();
 		}
 	}
 
 	private Queue<Ball> falling = new LinkedList<Ball>();
-	private Queue<Ball> activeBalls;
+
 	boolean vis[];
 	Ball tmp_ball_arr[];
 	Queue<Ball> tmp = new LinkedList<Ball>();
