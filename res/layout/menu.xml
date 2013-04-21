@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/menu"
+    android:orientation="vertical" >
+
+    <Button
+        android:id="@+id/exit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/newGame"
+        android:layout_alignParentBottom="true"
+        android:layout_alignRight="@+id/newGame"
+        android:layout_marginBottom="44dp"
+        android:text="@string/exit" />
+
+    <Button
+        android:id="@+id/newGame"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="44dp"
+        android:text="@string/newgame" />
+
+    <Button
+        android:id="@+id/lev1"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="18dp"
+        android:text="lev1" />
+
+    <Button
+        android:id="@+id/lev2"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/lev1"
+        android:layout_alignBottom="@+id/lev1"
+        android:layout_alignLeft="@+id/exit"
+        android:layout_marginLeft="24dp"
+        android:text="lev2" />
+
+    <Button
+        android:id="@+id/lev3"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/lev2"
+        android:layout_alignBottom="@+id/lev2"
+        android:layout_centerHorizontal="true"
+        android:text="lev3" />
+
+    <Button
+        android:id="@+id/lev4"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/lev3"
+        android:layout_alignBottom="@+id/lev3"
+        android:layout_marginLeft="20dp"
+        android:layout_toRightOf="@+id/lev3"
+        android:text="lev4" />
+
+    <Button
+        android:id="@+id/lev5"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/lev4"
+        android:layout_alignBottom="@+id/lev4"
+        android:layout_toRightOf="@+id/newGame"
+        android:text="lev5" />
+
+</RelativeLayout>

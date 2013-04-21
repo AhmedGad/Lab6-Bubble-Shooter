@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 
 public class Ball {
+	public static int ceil_shift = 50;
 	public float x, y, dx, dy;
 	public int id, color;
 	public static Bitmap bitmap; // the actual bitmap
@@ -15,6 +16,7 @@ public class Ball {
 	private static final int fallingSpeed = 4;
 	public boolean ceiled;
 	public boolean isFalling = false;
+	public static int screen_width, screen_height;
 
 	public Ball(int id) {
 		isFalling = false;
@@ -30,7 +32,7 @@ public class Ball {
 		// canvas.drawBitmap(bitmap, x - (bitmap.getWidth() / 2),
 		// y - (bitmap.getHeight() / 2), null);
 		paint.setColor(colors[color]);
-		canvas.drawCircle(x, y, radius, paint);
+		canvas.drawCircle(x, y + ceil_shift, radius, paint);
 	}
 
 	public void initFall() {

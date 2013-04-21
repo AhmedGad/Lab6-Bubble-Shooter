@@ -6,7 +6,7 @@ package bubbleShooter.main;
 import java.util.Queue;
 
 import android.graphics.Canvas;
-import android.util.Log;
+import android.media.MediaPlayer;
 import android.view.SurfaceHolder;
 
 /**
@@ -18,7 +18,6 @@ import android.view.SurfaceHolder;
 
 public class MainThread extends Thread {
 
-	private static final String TAG = MainThread.class.getSimpleName();
 	// Surface holder that can access the physical surface
 	private SurfaceHolder surfaceHolder;
 	// The actual view that handles inputs
@@ -33,36 +32,63 @@ public class MainThread extends Thread {
 		this.running = running;
 	}
 
+	MainActivity c;
+
+	public MainThread(MainActivity c) {
+		this.c = c;
+	}
+
 	public void init(SurfaceHolder surfaceHolder, MainGamePanel gamePanel) {
 		checkCollision = false;
 		this.surfaceHolder = surfaceHolder;
 		this.gamePanel = gamePanel;
 	}
 
-	private boolean pauseNext = false;
+	public boolean susbend = false;
 
 	public void myPause() {
-		pauseNext = true;
+		susbend = true;
 	}
 
 	public void myResume() {
-		running = true;
-		pauseNext = false;
-		run();
+		susbend = false;
+		synchronized (lock) {
+			lock.notifyAll();
+		}
 	}
+
+	MediaPlayer player;
+
+	public void audioPlayer() {
+		if (player != null)
+			player.release();
+		player = MediaPlayer.create(c, R.raw.click);
+		player.setVolume(100, 100);
+		player.start();
+	}
+
+	boolean runSound = true;
+
+	public final Object lock = new Object();
 
 	@Override
 	public void run() {
 		Canvas canvas;
-		Log.d(TAG, "Starting game loop");
-
-		Queue<Ball> activeBalls = this.gamePanel.activeBalls;
+		Queue<Ball> activeBalls = this.gamePanel.pool.activeBalls;
 		Ball moving = null;
 		float dx, dy;
 		int diam = Ball.radius * 2;
+
 		while (running) {
-			if (pauseNext)
-				running = false;
+			if (susbend) {
+				try {
+					synchronized (lock) {
+						lock.wait();
+					}
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+			}
 			canvas = null;
 			// try locking the canvas for exclusive pixel editing
 			// in the surface
@@ -71,6 +97,12 @@ public class MainThread extends Thread {
 				synchronized (surfaceHolder) {
 
 					if (checkCollision) {
+						if (runSound)
+							try {
+								runSound = false;
+								audioPlayer();
+							} catch (Exception e) {
+							}
 						moving = this.gamePanel.movingBall;
 						moving.ceiled = false;
 						boolean stop = false;
@@ -89,10 +121,17 @@ public class MainThread extends Thread {
 							}
 
 						if (stop) {
+							int height = canvas.getHeight();
+							if (moving.y > height - 6 * Ball.radius
+									- Ball.ceil_shift) {
+								gamePanel.loose = true;
+							}
+
 							activeBalls.add(moving);
-							this.gamePanel.checkFalling();
+							this.gamePanel.checkfalling();
 							this.gamePanel.movingBall = null;
 							checkCollision = false;
+							runSound = true;
 						}
 					}
 
@@ -110,5 +149,6 @@ public class MainThread extends Thread {
 				}
 			} // end finally
 		}
+
 	}
 }

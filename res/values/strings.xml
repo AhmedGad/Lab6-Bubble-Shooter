@@ -2,4 +2,12 @@
 
     <string name="app_name">Lab6-Bubble-Shooter</string>
 
+    <string name="newgame">NewGame</string>
+
+    <string name="chooselevel">ChooseLevel</string>
+
+    <string name="exit">Exit</string>
+
+    <string name="main_menu">Main Menu</string>
+
 </resources>

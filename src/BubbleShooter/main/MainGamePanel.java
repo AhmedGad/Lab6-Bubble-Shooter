@@ -3,9 +3,10 @@ package bubbleShooter.main;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
-import android.content.Context;
+
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -16,70 +17,73 @@ public class MainGamePanel extends SurfaceView implements
 		SurfaceHolder.Callback {
 
 	private static final String TAG = MainGamePanel.class.getSimpleName();
-
+	public int score;
 	public Ball movingBall = null, waitingBall = null;
 	public static int width;
 	public static int height;
 	private MainThread thread;
 	public static final int speed = 3;
+	Pool pool;
 
-	Queue<Ball> activeBalls = new LinkedList<Ball>();
-	Queue<Ball> BallPool = new LinkedList<Ball>();
+	public boolean loose;
 
-	public MainGamePanel(Context context, DisplayMetrics displaymetrics,
-			MainThread thread) {
+	public MainGamePanel(MainActivity context, DisplayMetrics displaymetrics,
+			MainThread thread, Pool pool, int lev) {
 		super(context);
+		this.lev = lev;
+		loose = false;
+		this.pool = pool;
+		score = 0;
 		// adding the callback (this) to the surface holder to intercept events
 		getHolder().addCallback(this);
 
 		width = displaymetrics.widthPixels;
 		height = displaymetrics.heightPixels;
 		// initialize Ball Pool
-		int totalBallNumber = (width * height) / (Ball.radius * Ball.radius)
-				* 2;
-		for (int i = 0; i < totalBallNumber; i++)
-			BallPool.add(new Ball(i));
 
-		waitingBall = BallPool.poll();
+		waitingBall = pool.BallPool.poll();
 		waitingBall.x = width / 2;
-		waitingBall.y = height - Ball.radius * 2 - 10;
+		waitingBall.y = height - Ball.radius * 2 - 10 - Ball.ceil_shift;
 		waitingBall.color = (int) (Math.random() * Ball.colors.length);
 
-		vis = new boolean[totalBallNumber];
-		tmp_ball_arr = new Ball[totalBallNumber];
+		paint.setTextSize(50 * thread.c.displaymetrics.density);
+		paint.setColor(Color.BLACK);
+
 		this.thread = thread;
 		// create the game loop thread
 		thread.init(getHolder(), this);
 
-		initLevel(0);
+		initLevel(lev);
 
 		// make the GamePanel focusable so it can handle events
 		setFocusable(true);
 	}
 
 	private void initLevel(int levNum) {
-		while (!activeBalls.isEmpty()) {
-			Ball tmp = activeBalls.poll();
-			BallPool.add(tmp);
+		while (!pool.activeBalls.isEmpty()) {
+			Ball tmp = pool.activeBalls.poll();
+			pool.BallPool.add(tmp);
 		}
 		int diam = Ball.radius * 2;
-		int maxRows = (height - diam * 5) / diam;
+		int maxRows = (height - diam * 6 - Ball.ceil_shift) / diam;
 		for (int i = 0; i < Math.min(3 + levNum, maxRows); i++) {
 			for (int j = 0; j < width / diam;) {
 				int same = levNum > 3 ? 1
 						: (int) (Math.random() * (5 - levNum)) + 1, cnt = 0;
 				int c = (int) (Math.random() * Ball.colors.length);
 				for (; j < width / diam && cnt < same; cnt++, j++) {
-					Ball tmp = BallPool.poll();
+					Ball tmp = pool.BallPool.poll();
 					tmp.y = i * diam + Ball.radius;
 					tmp.x = j * diam + Ball.radius;
 					tmp.color = c;
 					tmp.ceiled = i == 0 ? true : false;
-					activeBalls.add(tmp);
+					pool.activeBalls.add(tmp);
 				}
 			}
 		}
 	}
+
+	private boolean first = false;
 
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,
@@ -101,23 +105,32 @@ public class MainGamePanel extends SurfaceView implements
 		// this is a clean shutdown
 		boolean retry = true;
 		while (retry) {
+			thread.running = false;
 			try {
+				synchronized (thread.lock) {
+					thread.lock.notifyAll();
+				}
 				thread.join();
 				retry = false;
 			} catch (InterruptedException e) {
 				// try again shutting down the thread
 			}
 		}
+
 		Log.d(TAG, "Thread was shut down cleanly");
 	}
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		if (event.getAction() == MotionEvent.ACTION_DOWN && movingBall == null) {
-			movingBall = waitingBall;
-
+		if (event.getAction() == MotionEvent.ACTION_DOWN && movingBall == null
+				&& !first) {
 			int x = (int) event.getX();
 			int y = (int) event.getY();
+
+			if (y > height - 4 * Ball.radius - Ball.ceil_shift)
+				return true;
+			movingBall = waitingBall;
+
 			movingBall.dx = x - movingBall.x;
 			movingBall.dy = y - movingBall.y;
 			float s2 = (movingBall.dx * movingBall.dx)
@@ -127,35 +140,63 @@ public class MainGamePanel extends SurfaceView implements
 			movingBall.dx *= h;
 			movingBall.dy *= h;
 
-			waitingBall = BallPool.poll();
+			waitingBall = pool.BallPool.poll();
 			waitingBall.x = width / 2;
-			waitingBall.y = height - Ball.radius * 2 - 10;
+			waitingBall.y = height - Ball.radius * 2 - 10 - Ball.ceil_shift;
 			waitingBall.color = (int) (Math.random() * Ball.colors.length);
 			thread.checkCollision = true;
-
-			if (!thread.running)
-				thread.myResume();
+		}
+		if (thread.susbend) {
+			thread.myResume();
+			first = false;
 		}
 		return true;
 	}
 
+	Paint paint = new Paint();
+	private int lev;
+
 	public void render(Canvas canvas) {
 		canvas.drawColor(Color.BLACK);
+		paint.setColor(Color.WHITE);
+		canvas.drawRect(0, 0, width, Ball.ceil_shift, paint);
+		paint.setColor(Color.RED);
+		canvas.drawText("SCORE: " + score + " level: " + (lev + 1), 5,
+				Ball.ceil_shift - 10, paint);
 
-		if (movingBall != null)
-			movingBall.draw(canvas);
-
-		if (waitingBall != null)
-			waitingBall.draw(canvas);
-
-		for (Ball ball : activeBalls) {
-			ball.draw(canvas);
-		}
-		Iterator<Ball> it = falling.iterator();
-		while (it.hasNext())
-			it.next().draw(canvas);
-		if (falling.isEmpty() && movingBall == null)
+		if (loose) {
+			paint.setColor(Color.BLACK);
+			canvas.drawColor(Color.RED);
+			canvas.drawText("YOU LOSE!!!", 40, height / 2, paint);
 			thread.running = false;
+		} else {
+
+			if (movingBall != null)
+				movingBall.draw(canvas);
+
+			if (waitingBall != null)
+				waitingBall.draw(canvas);
+
+			for (Ball ball : pool.activeBalls) {
+				ball.draw(canvas);
+			}
+			Iterator<Ball> it = pool.falling.iterator();
+			while (it.hasNext())
+				it.next().draw(canvas);
+
+			if (pool.falling.isEmpty() && movingBall == null) {
+				thread.susbend = true;
+				if (score > 10) {
+					canvas.drawColor(Color.CYAN);
+					paint.setColor(Color.BLACK);
+					canvas.drawText("YOU WIN!!!", 40, height / 2, paint);
+					first = true;
+					pool.init();
+					initLevel(++lev);
+					score = 0;
+				}
+			}
+		}
 	}
 
 	/**
@@ -184,116 +225,117 @@ public class MainGamePanel extends SurfaceView implements
 			movingBall.x += movingBall.dx;
 			movingBall.y += movingBall.dy;
 		}
-		Queue<Ball> newFalling = new LinkedList<Ball>();
-		Iterator<Ball> it = falling.iterator();
+
+		int cnt = 0;
+
+		Iterator<Ball> it = pool.falling.iterator();
 		while (it.hasNext()) {
 			Ball b = it.next();
 			if (!b.fallingMove()) {
 				// if still inside add it again !
-				newFalling.add(b);
+				pool.tmp_ball_arr[cnt++] = b;
 			} else
-				BallPool.add(b);
+				pool.BallPool.add(b);
 		}
-		falling.clear();
-		falling = newFalling;
+		pool.falling.clear();
+		for (int i = 0; i < cnt; i++)
+			pool.falling.add(pool.tmp_ball_arr[i]);
+
 	}
 
-	private Queue<Ball> falling = new LinkedList<Ball>();
-
-	boolean vis[];
-	Ball tmp_ball_arr[];
-	Queue<Ball> tmp = new LinkedList<Ball>();
-
-	public void checkFalling() {
+	public void checkfalling() {
 		Queue<Ball> q = new LinkedList<Ball>();
 		float dx, dy;
 		int diam = Ball.radius * 2;
-		for (Ball ball : activeBalls)
-			vis[ball.id] = false;
+		for (Ball ball : pool.activeBalls)
+			pool.vis[ball.id] = false;
 
-		// TODO must be deleted and delete ball by ball when falling
-		// falling.clear();
+		// TODO must be deleted and delete ball by ball when pool.falling
+		// pool.falling.clear();
 
-		tmp.clear();
+		int cnt = 0;
 
 		q.add(movingBall);
-		vis[movingBall.id] = true;
+		pool.vis[movingBall.id] = true;
 
 		while (!q.isEmpty()) {
 			Ball cur = q.poll();
-			tmp.add(cur);
-			for (Ball ball : activeBalls) {
+			pool.tmp_ball_arr[cnt++] = cur;
+			for (Ball ball : pool.activeBalls) {
 				dx = ball.x - cur.x;
 				dy = ball.y - cur.y;
-				if (!vis[ball.id] && ball.color == cur.color
+				if (!pool.vis[ball.id] && ball.color == cur.color
 						&& dx * dx + dy * dy <= diam * diam) {
 					q.add(ball);
-					vis[ball.id] = true;
+					pool.vis[ball.id] = true;
 				}
 
 			}
 		}
 
 		// same touched colors must be at least 3
-		if (tmp.size() < 3) {
-			tmp.clear();
+		if (cnt < 3)
 			return;
-		}
 
-		for (Ball ball : tmp)
-			falling.add(ball);
+		score += cnt;
 
-		// remove falling balls from active balls
-		// for (Ball ball : falling) activeBalls.remove(ball);
+		for (int i = 0; i < cnt; i++)
+			pool.falling.add(pool.tmp_ball_arr[i]);
+
+		// remove pool.falling balls from active balls
+		// for (Ball ball : pool.falling) pool.activeBalls.remove(ball);
 
 		// another method for deletion(more efficient)
-		int cnt = 0;
-		for (Ball ball : activeBalls) {
-			if (!vis[ball.id])
-				tmp_ball_arr[cnt++] = ball;
-			vis[ball.id] = false;
+		cnt = 0;
+		for (Ball ball : pool.activeBalls) {
+			if (!pool.vis[ball.id])
+				pool.tmp_ball_arr[cnt++] = ball;
+			pool.vis[ball.id] = false;
 		}
-		activeBalls.clear();
+		pool.activeBalls.clear();
 		for (int i = 0; i < cnt; i++)
-			activeBalls.add(tmp_ball_arr[i]);
+			pool.activeBalls.add(pool.tmp_ball_arr[i]);
 		// /////////
 
-		for (Ball ball : activeBalls) {
+		for (Ball ball : pool.activeBalls) {
 
 			if (ball.ceiled) {
 				q.add(ball);
-				vis[ball.id] = true;
+				pool.vis[ball.id] = true;
 			}
 		}
 
 		while (!q.isEmpty()) {
 			Ball cur = q.poll();
 
-			for (Ball ball : activeBalls) {
+			for (Ball ball : pool.activeBalls) {
 				dx = ball.x - cur.x;
 				dy = ball.y - cur.y;
-				if (!vis[ball.id] && dx * dx + dy * dy <= diam * diam) {
+				if (!pool.vis[ball.id] && dx * dx + dy * dy <= diam * diam) {
 					q.add(ball);
-					vis[ball.id] = true;
+					pool.vis[ball.id] = true;
 				}
 			}
 		}
 
-		// add not visited balls to falling and visited balls will still active
+		// add not pool.visited balls to pool.falling and pool.visited balls
+		// will
+		// still active
 		cnt = 0;
 
-		for (Ball ball : activeBalls)
-			if (!vis[ball.id]) {
-				falling.add(ball);
+		for (Ball ball : pool.activeBalls)
+			if (!pool.vis[ball.id]) {
+				pool.falling.add(ball);
+				score++;
 			} else {
-				tmp_ball_arr[cnt++] = ball;
+				pool.tmp_ball_arr[cnt++] = ball;
 			}
 
-		activeBalls.clear();
+		pool.activeBalls.clear();
 		for (int i = 0; i < cnt; i++)
-			activeBalls.add(tmp_ball_arr[i]);
+			pool.activeBalls.add(pool.tmp_ball_arr[i]);
 
-		for (Ball ball : falling)
+		for (Ball ball : pool.falling)
 			if (!ball.isFalling)
 				ball.initFall();
 
